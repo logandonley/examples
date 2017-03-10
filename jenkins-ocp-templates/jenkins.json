@@ -5,7 +5,7 @@
       "openshift_resources": {
         "projects": [
           {
-            "name": "pipelines",
+            "name": "security-symposium-ci",
             "display_name": "Pipelines",
             "environment_type": "build",
             "templates": [

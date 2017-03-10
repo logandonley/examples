@@ -24,12 +24,12 @@
     # TODO we need to move this function to an ansible module
   - name: 'Create OpenShift Project'
     command: >
-      oc new-project pipelines
+      oc new-project security-symposium-ci
     ignore_errors: yes
 
   - name: 'Install Jenkins S2I Template'
     command: >
-      oc create -f jenkins-s2i-template.json -n pipelines
+      oc create -f jenkins-s2i-template.json -n security-symposium-ci
     ignore_errors: yes
 
   roles:
