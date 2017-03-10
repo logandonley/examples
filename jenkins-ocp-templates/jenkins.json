@@ -19,9 +19,41 @@
               {
                 "name": "jenkins-ephemeral",
                 "parameters": {
-                  "NAMESPACE": "pipelines",
+                  "NAMESPACE": "security-symposium-ci",
                   "MEMORY_LIMIT": "2Gi"
                 }
+              }
+            ],
+            "user_to_role": [
+              {
+                "user": {
+                  "user_name": "jgoldsmi"
+                },
+                "roles": [
+                  {
+                    "name": "admin"
+                  }
+                ]
+              },
+              {
+                "user": {
+                  "user_name": "obedin"
+                },
+                "roles": [
+                  {
+                    "name": "admin"
+                  }
+                ]
+              },
+              {
+                "user": {
+                  "user_name": "jholmes"
+                },
+                "roles": [
+                  {
+                    "name": "admin"
+                  }
+                ]
               }
             ]
           }
