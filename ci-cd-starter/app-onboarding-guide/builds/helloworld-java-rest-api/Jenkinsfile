@@ -1,0 +1,57 @@
+#!/usr/bin/groovy
+
+// TODO support master vs PR builds
+node (''){
+    env.APP_NAME = "${env.JOB_NAME}".replaceAll(/-?${env.PROJECT_NAME}-?/, '').replaceAll(/-?pipeline-?/, '')
+    env.OCP_API_SERVER = "${env.OPENSHIFT_API_URL}"
+    env.OCP_TOKEN = readFile('/var/run/secrets/kubernetes.io/serviceaccount/token').trim()
+
+    // these have been updated from the default, because we're using projects with a different prefix than the ci-cd project (i.e. labs-ci-cd vs acme-dev)
+    env.DEV_PROJECT = "acme-dev"
+    env.TEST_PROJECT = "acme-test"
+    env.UAT_PROJECT = "acme-uat"
+}
+
+node('mvn-build-pod') {
+
+  stage('SCM Checkout') {
+    // TODO the `checkout scm` command will enable PR builds and all sorts of other fun. we're checking out a static git repo ref for simplicity in this starter
+    git 'https://github.com/rht-labs/automation-api.git'
+  }
+
+  stage('Build App') {
+    // TODO - this should dynamically select the repository to use (e.g. snapshots vs releases)
+    sh "mvn clean deploy -DaltDeploymentRepository=nexus::default::http://nexus:8081/repository/labs-snapshots"
+  }
+
+  // assumes uber jar is created
+  stage('Build Image') {
+    sh "oc start-build ${env.APP_NAME} --from-dir=target/ --follow"
+  }
+
+  // no user changes should be needed below this point
+  stage ('Deploy to Dev') {
+    input "Promote Application to Dev?"
+
+    openshiftTag (apiURL: "${env.OCP_API_SERVER}", authToken: "${env.OCP_TOKEN}", destStream: "${env.APP_NAME}", destTag: 'latest', destinationAuthToken: "${env.OCP_TOKEN}", destinationNamespace: "${env.DEV_PROJECT}", namespace: "${env.OPENSHIFT_BUILD_NAMESPACE}", srcStream: "${env.APP_NAME}", srcTag: 'latest')
+
+    openshiftVerifyDeployment (apiURL: "${env.OCP_API_SERVER}", authToken: "${env.OCP_TOKEN}", depCfg: "${env.APP_NAME}", namespace: "${env.DEV_PROJECT}", verifyReplicaCount: true)
+  }
+
+  stage ('Deploy to Test') {
+    input "Promote Application to Test?"
+
+    openshiftTag (apiURL: "${env.OCP_API_SERVER}", authToken: "${env.OCP_TOKEN}", destStream: "${env.APP_NAME}", destTag: 'latest', destinationAuthToken: "${env.OCP_TOKEN}", destinationNamespace: "${env.TEST_PROJECT}", namespace: "${env.DEV_PROJECT}", srcStream: "${env.APP_NAME}", srcTag: 'latest')
+
+    openshiftVerifyDeployment (apiURL: "${env.OCP_API_SERVER}", authToken: "${env.OCP_TOKEN}", depCfg: "${env.APP_NAME}", namespace: "${env.TEST_PROJECT}", verifyReplicaCount: true)
+  }
+
+  stage ('Deploy to UAT') {
+    input "Promote Application to UAT?"
+
+    openshiftTag (apiURL: "${env.OCP_API_SERVER}", authToken: "${env.OCP_TOKEN}", destStream: "${env.APP_NAME}", destTag: 'latest', destinationAuthToken: "${env.OCP_TOKEN}", destinationNamespace: "${env.UAT_PROJECT}", namespace: "${env.TEST_PROJECT}", srcStream: "${env.APP_NAME}", srcTag: 'latest')
+
+    openshiftVerifyDeployment (apiURL: "${env.OCP_API_SERVER}", authToken: "${env.OCP_TOKEN}", depCfg: "${env.APP_NAME}", namespace: "${env.UAT_PROJECT}", verifyReplicaCount: true)
+  }
+
+}

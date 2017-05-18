@@ -1,0 +1,22 @@
+{
+  "openshift_clusters": [
+    {
+      "openshift_resources": {
+        "projects": [
+          {
+            "name": "acme-dev",
+            "display_name": "Acme Development"
+          },
+          {
+            "name": "acme-test",
+            "display_name": "Acme Test"
+          },
+          {
+            "name": "acme-uat",
+            "display_name": "Labs User Acceptance Test"
+          }
+        ]
+      }
+    }
+  ]
+}
