@@ -18,6 +18,8 @@ RUN chmod 755 /usr/local/bin/setup_6.x && \
 
 RUN npm install -g @angular/cli
 
+RUN npm i -g @compodoc/compodoc
+
 RUN chmod 777 /home/jenkins/.npm
 
 RUN chown -R 1001:0 $HOME && \
